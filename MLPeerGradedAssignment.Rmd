@@ -1,0 +1,184 @@
+---
+title: "Coursera:PeerGradedAssign:ML"
+author: "Nikhil Tiwari"
+date: "9/2/2017"
+output:
+  html_document:
+    highlight: monochrome
+    theme: flatly
+  pdf_document: default
+---
+
+# Overview
+## Using motion/activity sensing and recording devices such as Jawbone Up, Nike FuelBand, and Fitbit, it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+
+## DATA: In this project, data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants, has been collected. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+## AIM: The goal of this project is to build a machine learning algorithm to predict activity quality (classe) from activity monitors.
+
+# Preliminary Work
+## Reproduceability
+
+## An overall pseudo-random number generator seed was set at 1234 for all code. In order to reproduce the results below, the same seed should be used.Different packages were downloaded and installed, such as caret and randomForest. These should also be installed in order to reproduce the results below (please see code below for ways and syntax to do so).
+
+```{r setup & installing packages, include=T}
+# Setting Over all Seed 
+set.seed(1234)
+# Loading required packages
+req.Packages <- c("caret", "ggplot2", "GGally", "corrplot","randomForest", "rpart", "rpart.plot")
+# To check and install missing package and load them
+for(item in req.Packages){
+  if(!require(item,character.only = TRUE)){
+    install.packages(item, dependencies = T)
+  }
+  library(item, character.only = TRUE, verbose = F)
+}
+
+# Creating and setting working directory 
+if(!dir.exists("~/Desktop/CourseraMLPA")){
+dir.create("~/Desktop/CourseraMLPA")
+print("Directory created successfully")
+}
+
+setwd("~/Desktop/CourseraMLPA")
+print("Working Directory has been changed to ~/Desktop/CourseraMLPA")
+```
+
+# Downloading and Reading the data from assignment page
+## Now we will go ahead and downlaod data from the course peer graded assignment page "https://www.coursera.org/learn/practical-machine-learning/supplement/PvInj/course-project-instructions-read-first"
+### 1. Training Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+### 2. Testing Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+```{r data download and reading, include=T}
+Tr_Url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+Tst_Url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+# downloading Taining data and reading in r
+download.file(url=Tr_Url, destfile="train.csv", method = "curl")
+train <- read.csv("train.csv", na.strings = c("NA","#DIV/0!",""))
+dim(train)
+
+# downloading Testing data and reading in R
+download.file(url=Tst_Url, destfile="test.csv", method = "curl")
+test <- read.csv("test.csv", na.strings = c("NA","#DIV/0!",""))
+dim(test)
+
+# Seeing Data Structure of training data and conducting basis operations
+str(train)
+View(train)
+summary(train)
+```
+
+# Data Cleaning: Fixing missing values 
+```{r data cleaning}
+train<-train[,colSums(is.na(train)) == 0]
+dim(train)
+View(train)
+#summary of outcome we want to predict
+summary(train$classe)
+
+# Some variables are irrelevant to our current project: user_name, raw_timestamp_part_1, raw_timestamp_part_,2 cvtd_timestamp, new_window, and  num_window (columns 1 to 7). We can delete these variables.
+#removing columns which are not predictors
+train <- train[,-c(1:7)]
+
+# Similarly for testing set 
+test <-test[,colSums(is.na(test)) == 0]
+dim(test)
+View(test)
+test <- test[,-c(1:7)]
+
+```
+
+# Split training data into Training and Validation sets
+## For our calculation, we will set aside a subset of our training data for cross validation (30%).
+```{r sampling and splitting }
+inTrain <- createDataPartition(y=train$classe, p=0.7, list=FALSE)
+train_final <- train[inTrain, ]
+valid <- train[-inTrain, ]
+dim(train_final)
+dim(valid)
+```
+
+# Exploratory Analysis just to spot some trend or anamoly 
+```{r plots}
+# A look at the response Data
+
+## The response variable “classe” contains 5 levels: A, B, C, D and E. By observing this plot will can assess the frequency of each levels in the subTraining data set and compare one another.
+
+plot(train_final$classe, col="red", main="Bar Plot of levels of classe (response) within the Train_final data set", xlab="classe levels", ylab="Frequency")
+corrtab <- cor(train_final[,-53])
+corrtab
+featurePlot(x=train_final[,42:53], y = train$classe, plot = 'pairs')
+g = ggpairs(train_final[,42:53], aes(color = classe, alpha = 0.4))
+g
+```
+
+# Model CRation approach 
+
+## we will be using decision tree and random forest models as the reponse variable has many levels. Since, our outcome variable is classe, a factor variable with 5 levels. For this data set, “participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in 5 different fashions:
+##* exactly according to the specification (Class A)
+##* throwing the elbows to the front (Class B)
+##* lifting the dumbbell only halfway (Class C)
+##* lowering the dumbbell only halfway (Class D)
+##* throwing the hips to the front (Class E)
+
+## Class A corresponds to the excercise execution based on specifications (ideal), while the other 4 classes represent correspond common mistakes.Prediction evaluations will be based on maximizing the accuracy and minimizing the out-of-sample error. All other available variables after cleaning will be used in our analysis for prediction.
+
+## we will be desiging two models using decision tree and random forest algorithms and later will be tested for accuracy. The model with the highest accuracy will be chosen as our final model.
+
+# Modeling decison Tree using Rpart
+```{r Decision tree modeling}
+# Decision Tree
+model1 <- rpart(classe ~ ., train_final, method="class")
+summary(model1)
+# Plot of the Decision Tree
+rpart.plot(model1, main="Classification Tree", extra=102, under=TRUE, faclen=0)
+# Predicting:
+prediction1 <- predict(model1, valid[,-53], type = "class")
+
+```
+
+# Modeling using Random Forest 
+```{r Random Forest Modeling}
+# Random Forest
+model2 <- randomForest(classe ~. , data= train_final, method="class")
+summary(model2)
+print(model2)
+
+# Predicting:
+prediction2 <- predict(model2, valid[,-53], type = "class")
+
+```
+
+# Comparing the output of models and respective accuracy
+```{r Model Evaluation}
+
+# Decision Tree output
+out1 <- confusionMatrix(prediction1, valid[,53])
+print(out1)
+out1$overall
+
+# Random forest output
+out2 <- confusionMatrix(prediction2, valid[,53])
+print(out2)
+out2$overall
+
+# disabling scientific notation for comparision or results
+options(scipen = 999)
+
+## comparing over all result of both the models
+out1$overall
+out2$overall
+rbind(out1$overall, out2$overall)
+```
+
+# Decision on model and errors
+
+## Upon comparision of both the models its clearly evident that Random Forest yield a more accurate model. So for final prediction we will be using random forest model.
+
+# Final Predictions
+```{r Final output}
+final_predict <- predict(model2, test[,-53], type = "class")
+print(final_predict)
+Result <- cbind(test, final_predict)
+View(Result)
+write.csv(Result, "Final Predictions.csv")
+```
