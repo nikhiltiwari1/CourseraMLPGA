@@ -6,20 +6,21 @@ output:
   html_document:
     highlight: monochrome
     theme: flatly
+    toc_depth: 5
   pdf_document: default
 ---
 
 # Overview
-## Using motion/activity sensing and recording devices such as Jawbone Up, Nike FuelBand, and Fitbit, it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+Using motion/activity sensing and recording devices such as Jawbone Up, Nike FuelBand, and Fitbit, it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
 
-## DATA: In this project, data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants, has been collected. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+DATA: In this project, data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants, has been collected. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
 
-## AIM: The goal of this project is to build a machine learning algorithm to predict activity quality (classe) from activity monitors.
+AIM: The goal of this project is to build a machine learning algorithm to predict activity quality (classe) from activity monitors.
 
 # Preliminary Work
 ## Reproduceability
 
-## An overall pseudo-random number generator seed was set at 1234 for all code. In order to reproduce the results below, the same seed should be used.Different packages were downloaded and installed, such as caret and randomForest. These should also be installed in order to reproduce the results below (please see code below for ways and syntax to do so).
+An overall pseudo-random number generator seed was set at 1234 for all code. In order to reproduce the results below, the same seed should be used.Different packages were downloaded and installed, such as caret and randomForest. These should also be installed in order to reproduce the results below (please see code below for ways and syntax to do so).
 
 ```{r setup & installing packages, include=T}
 # Setting Over all Seed 
@@ -45,9 +46,9 @@ print("Working Directory has been changed to ~/Desktop/CourseraMLPA")
 ```
 
 # Downloading and Reading the data from assignment page
-## Now we will go ahead and downlaod data from the course peer graded assignment page "https://www.coursera.org/learn/practical-machine-learning/supplement/PvInj/course-project-instructions-read-first"
-### 1. Training Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-### 2. Testing Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+Now we will go ahead and downlaod data from the course peer graded assignment page "https://www.coursera.org/learn/practical-machine-learning/supplement/PvInj/course-project-instructions-read-first"
+1. Training Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+2. Testing Dataset from "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 ```{r data download and reading, include=T}
 Tr_Url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 Tst_Url <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
@@ -88,7 +89,7 @@ test <- test[,-c(1:7)]
 ```
 
 # Split training data into Training and Validation sets
-## For our calculation, we will set aside a subset of our training data for cross validation (30%).
+For our calculation, we will set aside a subset of our training data for cross validation (30%).
 ```{r sampling and splitting }
 inTrain <- createDataPartition(y=train$classe, p=0.7, list=FALSE)
 train_final <- train[inTrain, ]
@@ -111,18 +112,18 @@ g = ggpairs(train_final[,42:53], aes(color = classe, alpha = 0.4))
 g
 ```
 
-# Model CRation approach 
+# Model Creation approach 
 
-## we will be using decision tree and random forest models as the reponse variable has many levels. Since, our outcome variable is classe, a factor variable with 5 levels. For this data set, “participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in 5 different fashions:
-##* exactly according to the specification (Class A)
-##* throwing the elbows to the front (Class B)
-##* lifting the dumbbell only halfway (Class C)
-##* lowering the dumbbell only halfway (Class D)
-##* throwing the hips to the front (Class E)
+we will be using decision tree and random forest models as the reponse variable has many levels. Since, our outcome variable is classe, a factor variable with 5 levels. For this data set, “participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in 5 different fashions:
+ - exactly according to the specification (Class A)
+ - throwing the elbows to the front (Class B)
+ - lifting the dumbbell only halfway (Class C)
+ -  lowering the dumbbell only halfway (Class D)
+ -  throwing the hips to the front (Class E)
 
-## Class A corresponds to the excercise execution based on specifications (ideal), while the other 4 classes represent correspond common mistakes.Prediction evaluations will be based on maximizing the accuracy and minimizing the out-of-sample error. All other available variables after cleaning will be used in our analysis for prediction.
+Class A corresponds to the excercise execution based on specifications (ideal), while the other 4 classes represent correspond common mistakes.Prediction evaluations will be based on maximizing the accuracy and minimizing the out-of-sample error. All other available variables after cleaning will be used in our analysis for prediction.
 
-## we will be desiging two models using decision tree and random forest algorithms and later will be tested for accuracy. The model with the highest accuracy will be chosen as our final model.
+we will be desiging two models using decision tree and random forest algorithms and later will be tested for accuracy. The model with the highest accuracy will be chosen as our final model.
 
 # Modeling decison Tree using Rpart
 ```{r Decision tree modeling}
@@ -172,7 +173,7 @@ rbind(out1$overall, out2$overall)
 
 # Decision on model and errors
 
-## Upon comparision of both the models its clearly evident that Random Forest yield a more accurate model. So for final prediction we will be using random forest model.
+Upon comparision of both the models its clearly evident that Random Forest yield a more accurate model. So for final prediction we will be using random forest model.
 
 # Final Predictions
 ```{r Final output}
